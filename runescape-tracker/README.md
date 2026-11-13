@@ -1,38 +1,34 @@
 # RuneScape Account Tracker
 
-A small Python app that looks up an Old School RuneScape player on the official hiscores, saves a snapshot of their skills each time, and shows the XP they've gained over time.
+Look up Old School RuneScape players, see how much XP they've gained, and keep a small always-on-top window on your desktop.
 
-It doesn't need any installs or API keys. It only uses Python 3, which is already on your Mac.
+**Privacy:** the only thing saved on your computer is the list of account names (`data/accounts.json`). Stats are never saved. Current stats come from the official hiscores. XP gains come from [Wise Old Man](https://wiseoldman.net), a free website that keeps each player's stat history.
 
-## How to run it
+## The desktop widget
 
 ```
 cd runescape-tracker
-python3 tracker.py check "Lynx Titan"     # look up stats and save a snapshot
-python3 tracker.py gains "Lynx Titan"     # show XP gained since the first snapshot
-python3 tracker.py history "Lynx Titan"   # list every saved snapshot
+python3 widget.py
+```
+
+Type an account name, press **Add**, and the window shows each account's total level and the XP it gained today (or this week). It refreshes every 15 minutes. You can also click **↻** to refresh. Click **✕** to remove an account.
+
+The widget needs Tk, which you install once with `brew install python-tk@3.15`.
+
+## The command line
+
+```
+python3 tracker.py check  "Lynx Titan"                 # current stats
+python3 tracker.py gains  "Lynx Titan" --period day    # XP gained (day, week or month)
+python3 tracker.py add    "Lynx Titan"                 # save a name for the widget
+python3 tracker.py remove "Lynx Titan"
+python3 tracker.py list
 ```
 
 Use quotes around names that have spaces.
 
-## Example
-
-```
-  Stats for Lynx Titan
-
-  Skill          Level              XP
-  ------------------------------------
-  Overall         2278   4,600,000,000
-  Attack            99     200,000,000
-  ...
-```
-
-## Where data is stored
-
-Snapshots are saved in `data/<player>.json`. Git ignores that folder, so your data stays on your computer.
-
 ## Ideas to try next
 
-- Add RS3 support. Its hiscores address is `https://secure.runescape.com/m=hiscore/index_lite.ws?player=NAME`, and it returns CSV instead of JSON.
-- Show boss kill counts. The JSON response also contains an `"activities"` list.
-- Track several accounts at once with a `check-all` command.
+- Show boss kill counts. Wise Old Man's gains also include a `"bosses"` list.
+- Change the widget's colors at the top of `widget.py`.
+- Add a "month" choice to the widget.
