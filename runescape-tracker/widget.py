@@ -12,11 +12,18 @@ Run it with:
 import queue
 import threading
 import tkinter as tk
+import urllib.request
+from pathlib import Path
 
 import tracker
 
 REFRESH_MINUTES = 15
 GRID_COLUMNS = 3
+
+# Skill icons come from the Old School RuneScape Wiki. They're downloaded once
+# into an "icons" folder and reused after that.
+ICON_URL = "https://oldschool.runescape.wiki/images/{}_icon.png"
+ICONS_FOLDER = Path(__file__).parent / "icons"
 
 # Colors for the window
 BACKGROUND = "#1e1e24"
@@ -27,6 +34,21 @@ DIM = "#8a8a94"
 GOLD = "#f2c14e"
 GREEN = "#6fcf7f"
 RED = "#e86a6a"
+
+
+def download_icons():
+    """Download any skill icons we don't have yet. Missing icons are skipped quietly."""
+    ICONS_FOLDER.mkdir(exist_ok=True)
+    for skill in tracker.SKILLS[1:]:
+        file = ICONS_FOLDER / f"{skill}.png"
+        if file.exists():
+            continue
+        request = urllib.request.Request(ICON_URL.format(skill), headers={"User-Agent": tracker.USER_AGENT})
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                file.write_bytes(response.read())
+        except OSError:
+            pass
 
 
 def short_number(number):
@@ -62,6 +84,7 @@ class Widget:
         self.update_account_menu()
         self.refresh()
         self.check_for_results()
+        threading.Thread(target=self.get_icons, daemon=True).start()
 
     # ---------- Building the window ----------
 
@@ -92,13 +115,16 @@ class Widget:
             row, column = divmod(index, GRID_COLUMNS)
             cell = tk.Frame(grid, bg=CELL, padx=6, pady=3)
             cell.grid(row=row, column=column, sticky="nsew", padx=2, pady=2)
+            # Packed first so it claims the right-hand side of the box.
+            icon = tk.Label(cell, bg=CELL)
+            icon.pack(side="right", padx=(4, 0))
             name = tk.Label(cell, text=skill, fg=DIM, bg=CELL, font=("Helvetica", 10), anchor="w")
             name.pack(fill="x")
             level = tk.Label(cell, text="–", fg=TEXT, bg=CELL, font=("Helvetica", 16, "bold"), anchor="w")
             level.pack(side="left")
             gained = tk.Label(cell, text="", fg=GREEN, bg=CELL, font=("Helvetica", 10), anchor="e")
             gained.pack(side="right")
-            self.cells[skill] = (cell, name, level, gained)
+            self.cells[skill] = (cell, name, level, gained, icon)
         # Let the cells stretch when the window is resized.
         for column in range(GRID_COLUMNS):
             grid.columnconfigure(column, weight=1, uniform="skills")
@@ -168,13 +194,32 @@ class Widget:
         except tracker.TrackerError as error:
             self.results.put((name, period, None, None, str(error)))
 
+    def get_icons(self):
+        """Runs in the background: download the icons, then tell the window they're ready."""
+        download_icons()
+        self.results.put("icons ready")
+
+    def show_icons(self):
+        self.icon_images = []  # Tk forgets images unless we keep hold of them
+        for skill, (cell, name, level, gained, icon) in self.cells.items():
+            file = ICONS_FOLDER / f"{skill}.png"
+            if file.exists():
+                image = tk.PhotoImage(file=file)
+                self.icon_images.append(image)
+                icon.config(image=image)
+
     def check_for_results(self):
         """Every half second, see if a background lookup has finished."""
         try:
-            name, period, stats, gains, error = self.results.get_nowait()
+            result = self.results.get_nowait()
         except queue.Empty:
             pass
         else:
+            if result == "icons ready":
+                self.show_icons()
+                self.window.after(500, self.check_for_results)
+                return
+            name, period, stats, gains, error = result
             # Ignore old answers for an account or period that is no longer chosen.
             if name == self.account.get() and period == self.period.get():
                 if error:
@@ -193,10 +238,10 @@ class Widget:
 
     def show_account(self, stats, gains, period):
         self.total_label.config(text=f"Total level {stats['Overall']['level']:,}")
-        for skill, (cell, name, level, gained) in self.cells.items():
+        for skill, (cell, name, level, gained, icon) in self.cells.items():
             xp = gains.get(skill, {}).get("xp", 0)
             color = CELL_GAINED if xp else CELL
-            for part in (cell, name, level, gained):
+            for part in (cell, name, level, gained, icon):
                 part.config(bg=color)
             level.config(text=stats.get(skill, {}).get("level", "–"))
             gained.config(text=f"+{short_number(xp)}" if xp else "")
@@ -218,8 +263,8 @@ class Widget:
     def show_message(self, message, color):
         """Clear the grid and show a message in the gains box instead."""
         self.total_label.config(text="")
-        for cell, name, level, gained in self.cells.values():
-            for part in (cell, name, level, gained):
+        for cell, name, level, gained, icon in self.cells.values():
+            for part in (cell, name, level, gained, icon):
                 part.config(bg=CELL)
             level.config(text="–")
             gained.config(text="")
