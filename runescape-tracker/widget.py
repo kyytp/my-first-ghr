@@ -30,6 +30,7 @@ BACKGROUND = "#1e1e24"
 CELL = "#2a2a33"
 CELL_GAINED = "#26402c"  # cells for skills that gained XP get a green tint
 TEXT = "#e8e6e3"
+DIVIDER = "#44444f"
 DIM = "#8a8a94"
 GOLD = "#f2c14e"
 GREEN = "#6fcf7f"
@@ -75,6 +76,11 @@ class Widget:
         window.attributes("-topmost", True)  # stay on top of other windows
         window.geometry("440x720")
         window.minsize(340, 520)
+        # Show the RuneScape icon in the Dock, if make-app.sh has downloaded it.
+        app_icon = ICONS_FOLDER / "app.png"
+        if app_icon.exists():
+            self.app_icon = tk.PhotoImage(file=app_icon)
+            window.iconphoto(True, self.app_icon)
 
         self.build_header()
         self.build_skill_grid()
@@ -96,8 +102,11 @@ class Widget:
         tk.Button(header, text="↻", command=self.refresh, width=2,
                   highlightbackground=BACKGROUND).pack(side="right")
 
+        # A thin line under the title so it has some breathing room.
+        tk.Frame(self.window, height=1, bg=DIVIDER).pack(fill="x", pady=(8, 8))
+
         row = tk.Frame(self.window, bg=BACKGROUND)
-        row.pack(fill="x", pady=(6, 0))
+        row.pack(fill="x")
         self.account_menu = tk.OptionMenu(row, self.account, "")
         self.account_menu.configure(bg=BACKGROUND, highlightbackground=BACKGROUND)
         self.account_menu.pack(side="left")
