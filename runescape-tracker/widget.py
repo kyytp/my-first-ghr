@@ -74,7 +74,7 @@ class Widget:
         window.title("RS Tracker")
         window.configure(bg=BACKGROUND, padx=12, pady=10)
         window.attributes("-topmost", True)  # stay on top of other windows
-        window.geometry("440x720")
+        window.geometry("440x800")
         window.minsize(340, 520)
         # Show the RuneScape icon in the Dock, if make-app.sh has downloaded it.
         app_icon = ICONS_FOLDER / "app.png"
@@ -83,9 +83,11 @@ class Widget:
             window.iconphoto(True, self.app_icon)
 
         self.build_header()
+        # The add box is pinned to the bottom first, so it always stays visible
+        # and the grid and gains list share whatever space is left.
+        self.build_add_box()
         self.build_skill_grid()
         self.build_gains_box()
-        self.build_add_box()
 
         self.update_account_menu()
         self.refresh()
@@ -159,17 +161,19 @@ class Widget:
         self.gains_text.tag_configure("red", foreground=RED)
 
     def build_add_box(self):
+        self.status = tk.Label(self.window, text="", fg=DIM, bg=BACKGROUND, font=("Helvetica", 10))
+        self.status.pack(side="bottom", anchor="w", pady=(4, 0))
         box = tk.Frame(self.window, bg=BACKGROUND)
-        box.pack(fill="x", pady=(10, 0))
-        self.name_entry = tk.Entry(box, width=18)
+        box.pack(side="bottom", fill="x", pady=(10, 0))
+        self.name_entry = tk.Entry(box, width=18, bg="#3a3a44", fg=TEXT, insertbackground=TEXT,
+                                   relief="flat", highlightthickness=1,
+                                   highlightbackground=DIVIDER, highlightcolor=GOLD)
         self.name_entry.pack(side="left", fill="x", expand=True)
         self.name_entry.bind("<Return>", lambda event: self.add_account())
         tk.Button(box, text="Add", command=self.add_account,
                   highlightbackground=BACKGROUND).pack(side="left", padx=(6, 0))
         tk.Button(box, text="Remove", command=self.remove_account,
                   highlightbackground=BACKGROUND).pack(side="left", padx=(6, 0))
-        self.status = tk.Label(self.window, text="", fg=DIM, bg=BACKGROUND, font=("Helvetica", 10))
-        self.status.pack(anchor="w", pady=(4, 0))
 
     def update_account_menu(self):
         """Fill the account dropdown with the saved names."""
