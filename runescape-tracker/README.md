@@ -20,6 +20,10 @@ Pick an account from the dropdown to switch between accounts. Drag the window's 
 
 The widget needs Tk, which you install once with `brew install python-tk@3.15`.
 
+### Open it like a normal app
+
+Run `bash make-app.sh` once. It creates **RS Tracker** in your Applications folder. After that you can open it from Launchpad or Spotlight (Command + Space, then type "RS Tracker"), or drag it to your Dock. If you move this folder, run `make-app.sh` again.
+
 ## The command line
 
 ```
