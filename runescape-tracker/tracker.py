@@ -35,6 +35,17 @@ USER_AGENT = "my-first-ghr-runescape-tracker"
 # The only file this app saves: a list of account names.
 ACCOUNTS_FILE = Path(__file__).parent / "data" / "accounts.json"
 
+# Every skill, in the same order the hiscores list them.
+SKILLS = [
+    "Overall", "Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic",
+    "Cooking", "Woodcutting", "Fletching", "Fishing", "Firemaking", "Crafting", "Smithing",
+    "Mining", "Herblore", "Agility", "Thieving", "Slayer", "Farming", "Runecraft", "Hunter",
+    "Construction", "Sailing",
+]
+
+# Wise Old Man spells a skill name differently from the hiscores, so translate it.
+WISE_OLD_MAN_NAMES = {"runecrafting": "Runecraft"}
+
 
 class TrackerError(Exception):
     """A problem we can explain to the user in plain English."""
@@ -86,7 +97,8 @@ def fetch_gains(player, period="week"):
     for name, skill in data["data"]["skills"].items():
         xp = skill["experience"]["gained"]
         if xp > 0:
-            gains[name.capitalize()] = {"levels": skill["level"]["gained"], "xp": xp}
+            name = WISE_OLD_MAN_NAMES.get(name, name.capitalize())
+            gains[name] = {"levels": skill["level"]["gained"], "xp": xp}
     return gains
 
 

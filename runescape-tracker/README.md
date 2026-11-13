@@ -11,7 +11,12 @@ cd runescape-tracker
 python3 widget.py
 ```
 
-Type an account name, press **Add**, and the window shows each account's total level and the XP it gained today (or this week). It refreshes every 15 minutes. You can also click **↻** to refresh. Click **✕** to remove an account.
+Type an account name and press **Add**. The window shows:
+
+- **All 24 skill levels** in a 3 × 8 grid, plus your total level. Skills that gained XP are tinted green and show how much.
+- **XP gained** today or this week, biggest gains first, below the grid.
+
+Pick an account from the dropdown to switch between accounts. Drag the window's corner to resize it. It refreshes every 15 minutes, or click **↻** to refresh now. **Remove** deletes the chosen account from your list.
 
 The widget needs Tk, which you install once with `brew install python-tk@3.15`.
 
